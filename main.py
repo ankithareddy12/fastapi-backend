@@ -1,0 +1,10 @@
+with open("main.py", "w") as f:
+    f.write("""
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+def read_root():
+    return {"message": "FastAPI is working!"}
+""")
