@@ -133,3 +133,38 @@ async def init_db():
 
 from database import engine, Base
 Base.metadata.create_all(bind=engine)  # Creates tables if they don't exist
+
+from fastapi import FastAPI, HTTPException, Depends
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from database import engine, SessionLocal, Base
+import models
+
+# Initialize database
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI()
+
+# Dependency to get DB session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# User model
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+    referral_code: str = None
+
+# Register API
+@app.post("/api/register")
+def register_user(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = models.User(username=user.username, email=user.email, password=user.password, referral_code=user.referral_code)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return {"message": "User registered successfully"}
