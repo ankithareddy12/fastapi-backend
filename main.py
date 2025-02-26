@@ -129,3 +129,7 @@ async def referral_stats(username: str, db: Session = Depends(get_db)):
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+
+from database import engine, Base
+Base.metadata.create_all(bind=engine)  # Creates tables if they don't exist
