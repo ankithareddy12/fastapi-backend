@@ -2,5 +2,7 @@ fastapi
 uvicorn
 sqlalchemy
 aiosqlite
-passlib[bcrypt]
+passlib
+bcrypt
 python-multipart
+PyJWT
