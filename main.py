@@ -12,19 +12,19 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from starlette.middleware.sessions import SessionMiddleware
 
 # Database Configuration
-DATABASE_URL = "sqlite+aiosqlite:///./test.db"  # Change to PostgreSQL in production
+DATABASE_URL = "sqlite+aiosqlite:///./test.db"  # Change this to PostgreSQL in production
 engine = create_async_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 Base = declarative_base()
 
-# Password Hashing & Authentication
+# Security and Authentication
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = "your_secret_key"
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_MINUTES = 30
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-# FastAPI Application
+# FastAPI App Initialization
 app = FastAPI(title="FastAPI Backend for Linktr")
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
@@ -49,7 +49,7 @@ class Referral(Base):
     status = Column(String, default="pending")
     referrer = relationship("User", foreign_keys=[referrer_id])
 
-# Dependency to Get Database Session
+# Dependency: Get Database Session
 def get_db():
     db = SessionLocal()
     try:
@@ -70,11 +70,12 @@ def create_jwt_token(data: dict, expires_delta: timedelta):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-# API Endpoints
+# Root Endpoint
 @app.get("/", tags=["Root"])
 async def read_root():
     return {"message": "FastAPI is working!"}
 
+# User Registration
 @app.post("/api/register", tags=["User Authentication"])
 async def register_user(username: str, email: str, password: str, referral_code: str = None, db: Session = Depends(get_db)):
     if not re.match(r"^[\w\.-]+@[\w\.-]+\.\w{2,}$", email):
@@ -97,6 +98,7 @@ async def register_user(username: str, email: str, password: str, referral_code:
     db.refresh(new_user)
     return {"message": "User registered successfully"}
 
+# User Login
 @app.post("/api/login", tags=["User Authentication"])
 async def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == form_data.username).first()
@@ -105,6 +107,7 @@ async def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Sessi
     token = create_jwt_token({"sub": user.username}, timedelta(minutes=TOKEN_EXPIRE_MINUTES))
     return {"access_token": token, "token_type": "bearer"}
 
+# Password Reset Request
 @app.post("/api/forgot-password", tags=["User Authentication"])
 async def forgot_password(email: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
@@ -113,6 +116,7 @@ async def forgot_password(email: str, db: Session = Depends(get_db)):
     reset_token = secrets.token_urlsafe(32)
     return {"message": "Password reset link sent to email", "reset_token": reset_token}
 
+# Referral Stats
 @app.get("/api/referral-stats", tags=["Referrals"])
 async def referral_stats(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
@@ -121,8 +125,7 @@ async def referral_stats(username: str, db: Session = Depends(get_db)):
     count = db.query(Referral).filter(Referral.referrer_id == user.id, Referral.status == "successful").count()
     return {"total_referrals": count}
 
-# Database Initialization
+# Run Database Setup
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-
