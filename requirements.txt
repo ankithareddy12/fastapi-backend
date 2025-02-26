@@ -1,0 +1,2 @@
+with open("requirements.txt", "w") as f:
+    f.write("fastapi\nuvicorn\nsqlalchemy\naiosqlite\npasslib[bcrypt]\npython-multipart\n")
