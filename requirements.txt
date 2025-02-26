@@ -1,7 +1,9 @@
 fastapi
 uvicorn
 SQLAlchemy
-PyJWT
-passlib
-itsdangerous
 pydantic
+passlib
+bcrypt
+PyJWT
+itsdangerous
+python-multipart
