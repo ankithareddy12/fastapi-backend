@@ -1,7 +1,8 @@
+
 from fastapi import FastAPI
 
-app = FastAPI()  # This must be present
+app = FastAPI()
 
 @app.get("/")
 def read_root():
-    return {"message": "FastAPI is working!"}
+    return {"message": "FastAPI is updated from Colab!"}
